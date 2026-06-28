@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Portal{% endblock %} | The New College</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='image.png') }}" alt="The New College">
+            <div class="sidebar-brand-text">
+                <h1>The New College</h1>
+                <span>MCQ Admin Portal</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Overview</div>
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/></svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('leaderboard') }}" class="nav-link {% if active_page == 'leaderboard' %}active{% endif %}">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5c0 .538-.012 1.05-.034 1.536a3 3 0 1 1-1.133 5.89c-.006 1.008-.025 1.956-.073 2.813l-.014.433a.5.5 0 0 1-.498.45h-.025a.5.5 0 0 1-.497-.45l-.014-.433c-.048-.857-.067-1.805-.073-2.813a3 3 0 1 1-1.133-5.89A23 23 0 0 1 2.5.5m.099 2.293a1 1 0 0 0-.1.725A5.002 5.002 0 0 0 3 6c0 1.098-.5 2-1 2.828V11.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-2.672c-.5-.828-1-1.73-1-2.828 0-1.482.895-2.773 2.172-3.354-.029-.104-.051-.214-.051-.328a1 1 0 0 1 1-1 1 1 0 0 1 1 1c0 .114-.022.224-.051.328A3.97 3.97 0 0 1 12 6c0 1.098-.5 2-1 2.828V11.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5V8.828c-.5-.828-1-1.73-1-2.828a5.002 5.002 0 0 0-3.099-4.707 1 1 0 0 0-.1-.725"/></svg>
+                Leaderboard
+            </a>
+            <a href="{{ url_for('analytics') }}" class="nav-link {% if active_page == 'analytics' %}active{% endif %}">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2z"/></svg>
+                Analytics
+            </a>
+
+            <div class="nav-section-label">Exam Management</div>
+            <a href="{{ url_for('publish_questions_page') }}" class="nav-link {% if active_page == 'publish_questions' %}active{% endif %}">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M5 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm-.5 2.5A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5M5 8a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1z"/><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1"/></svg>
+                Publish Questions
+            </a>
+
+            <div class="nav-section-label">Actions</div>
+            <a href="{{ url_for('export_data') }}" class="nav-link">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                Export Excel
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="nav-link logout">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3"/></svg>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <div class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <header class="topbar">
+            <button class="menu-toggle" type="button" aria-label="Toggle menu">☰</button>
+            <strong>The New College Admin</strong>
+        </header>
+
+        <div class="page-container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

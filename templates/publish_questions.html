@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Publish Questions{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/publish_questions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Home</a> / Publish Questions</div>
+    <h2>Publish Live Questions</h2>
+    <p>Select a subject from the <strong>Subject</strong> collection, create MCQ questions, and publish them to <strong>Live questions</strong>.</p>
+</div>
+
+<div class="publish-layout">
+    <div class="publish-main">
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Question Builder</h3>
+                <span class="badge badge-pending" id="question-count-badge">0 questions</span>
+            </div>
+            <div class="panel-body padded">
+                <div class="subject-setup">
+                    <div class="form-group relative-container">
+                        <label for="subject-search-input">Subject</label>
+                        <div class="custom-select-container" id="subject-select-container">
+                            <div class="custom-select-trigger" id="subject-select-trigger">
+                                <span class="trigger-text">Select a subject...</span>
+                                <span class="select-arrow">▼</span>
+                            </div>
+                            <div class="custom-select-dropdown" id="subject-select-dropdown">
+                                <div class="dropdown-search-wrapper">
+                                    <input type="text" id="subject-search-input" placeholder="Type to search subject..." autocomplete="off">
+                                </div>
+                                <ul class="dropdown-options" id="dropdown-options-list">
+                                    <li class="dropdown-option empty-option" data-value="" data-id="" data-code="">Select a subject...</li>
+                                    {% for subject in subjects %}
+                                    <li class="dropdown-option" data-value="{{ subject.name }}" data-id="{{ subject.id }}" data-code="{{ subject.code }}">
+                                        <div class="option-title">{{ subject.name }}</div>
+                                        {% if subject.code %}
+                                        <div class="option-code">{{ subject.code }}</div>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <select id="subject-select" style="display: none;">
+                                <option value="">Select a subject...</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.name }}" data-id="{{ subject.id }}" data-code="{{ subject.code }}">
+                                    {{ subject.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if not subjects %}
+                        <div class="field-note error-note">
+                            <strong>No subjects found</strong> in the <strong>subjects</strong> collection in MongoDB Atlas.
+                            <br>Please add subjects to the database first.
+                        </div>
+                        {% else %}
+                        <p class="field-note">{{ subjects|length }} subject(s) available from database</p>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="subject-code">Subject Code</label>
+                        <input type="text" id="subject-code" placeholder="Auto-filled from selected subject" readonly>
+                        <p class="field-note">This code is automatically populated from the selected subject</p>
+                    </div>
+                </div>
+
+                <div class="builder-toolbar">
+                    <button type="button" class="btn btn-outline btn-sm" id="add-question-btn">
+                        + Add Question
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" id="load-existing-btn">
+                        Load Existing
+                    </button>
+                </div>
+
+                <div id="questions-container" class="questions-container"></div>
+
+                <div class="empty-builder" id="empty-builder">
+                    <div class="empty-builder-icon">?</div>
+                    <h4>No questions yet</h4>
+                    <p>Select a subject and click <strong>Add Question</strong> to start building your exam paper.</p>
+                </div>
+
+                <div class="publish-actions">
+                    <button type="button" class="btn btn-gold" id="submit-all-btn">Submit &amp; Publish All</button>
+                    <button type="button" class="btn btn-danger" id="clear-subject-btn">Clear Subject Questions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="publish-sidebar">
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Live Question Bank</h3>
+            </div>
+            <div class="panel-body padded">
+                <div class="sidebar-search-wrapper" style="margin-bottom: 0.85rem;">
+                    <input type="text" id="sidebar-subject-search" class="sidebar-search-input" placeholder="Search live subjects..." autocomplete="off" style="width: 100%; padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.88rem; outline: none; background: var(--bg); font-family: inherit;">
+                </div>
+                <div class="live-stats-list" id="live-stats-list">
+                    {% if live_subject_stats %}
+                        {% for item in live_subject_stats %}
+                        <button type="button" class="live-stat-item" data-subject="{{ item._id }}">
+                            <span>{{ item._id }}</span>
+                            <span class="badge badge-pass">{{ item.count }} live</span>
+                        </button>
+                        {% endfor %}
+                    {% else %}
+                        <p class="muted-note">No live questions published yet.</p>
+                    {% endif %}
+                </div>
+                <form action="#" onsubmit="return false;" class="clear-all-form">
+                    <button type="button" class="btn btn-danger btn-sm" id="clear-all-btn" style="width:100%;">
+                        Clear All Live Questions
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Preview</h3>
+                <span class="badge badge-pending" id="preview-count">0</span>
+            </div>
+            <div class="panel-body padded">
+                <div id="preview-container" class="preview-container">
+                    <p class="muted-note">Select a subject and load or publish questions to preview them here.</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/publish_questions.js') }}"></script>
+{% endblock %}

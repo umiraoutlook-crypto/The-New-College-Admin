@@ -1,0 +1,6 @@
+flask
+pymongo
+gunicorn
+pandas
+openpyxl
+certifi

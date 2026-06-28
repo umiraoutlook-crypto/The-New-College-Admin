@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Edit Student{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> / Edit Student</div>
+    <h2>Edit Student Profile</h2>
+    <p>Update details for {{ user.name or (user.first_name ~ ' ' ~ user.last_name) }}.</p>
+</div>
+
+<div style="max-width:720px;">
+    <div class="panel">
+        <div class="panel-header"><h3>Student Information</h3></div>
+        <div class="panel-body padded">
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Register Number</label>
+                        <input type="text" name="register_number" value="{{ user.register_number }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="text" name="dob" value="{{ user.dob }}" placeholder="YYYY-MM-DD">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Programme</label>
+                    <input type="text" name="degree" value="{{ user.degree or user.programme }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Admission Year (Batch)</label>
+                    <input type="text" name="batch" value="{{ user.batch or user.admission_year }}">
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:1rem;">
+                    <button type="submit" class="btn btn-gold" style="flex:1;padding:0.85rem;">Save Changes</button>
+                    <a href="{{ url_for('view_user', user_id=user._id) }}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

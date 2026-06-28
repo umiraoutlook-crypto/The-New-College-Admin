@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-live-stats>
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Home</a> / Analytics</div>
+    <h2>Assessment Analytics</h2>
+    <p>Live performance insights — charts refresh automatically every 8 seconds.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon maroon"><span style="font-size:1.2rem;">👥</span></div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="total_users">{{ stats.total_users }}</div>
+            <div class="stat-label">Registered Students</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon gold"><span style="font-size:1.2rem;">📝</span></div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="total_exams">{{ stats.total_exams }}</div>
+            <div class="stat-label">Exams Taken</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><span style="font-size:1.2rem;">✓</span></div>
+        <div class="stat-body">
+            <div class="stat-value"><span data-stat="pass_rate">{{ stats.pass_rate }}</span>%</div>
+            <div class="stat-label">Pass Rate</div>
+            <div class="stat-sub"><span data-stat="passed">{{ stats.passed }}</span> passed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><span style="font-size:1.2rem;">⏳</span></div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="not_attempted">{{ stats.not_attempted }}</div>
+            <div class="stat-label">Not Attempted</div>
+            <div class="stat-sub"><span data-stat="violations">{{ stats.violation_count }}</span> violations</div>
+        </div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-panel">
+        <div class="chart-title">Pass vs Fail</div>
+        <div class="chart-wrap"><canvas id="passFailChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <div class="chart-title"><span class="live-dot"></span> Live Score Distribution</div>
+        <div class="chart-wrap"><canvas id="scoreDistChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <div class="chart-title">Students by Degree</div>
+        <div class="chart-wrap"><canvas id="degreeChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <div class="chart-title">Students by Batch</div>
+        <div class="chart-wrap"><canvas id="batchChart"></canvas></div>
+    </div>
+</div>
+
+<div class="panel leaderboard-section">
+    <div class="panel-header">
+        <h3>Student Categories</h3>
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-sm btn-outline">Full Leaderboard →</a>
+    </div>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(event, 'pass')">Passed ({{ passed_students|length }})</button>
+        <button class="tab-btn" onclick="switchTab(event, 'fail')">Failed ({{ failed_students|length }})</button>
+        <button class="tab-btn" onclick="switchTab(event, 'violation')">Violations ({{ violation_students|length }})</button>
+        <button class="tab-btn" onclick="switchTab(event, 'pending')">Not Attempted ({{ not_attempted|length }})</button>
+        <button class="tab-btn" onclick="switchTab(event, 'top')">Top 10</button>
+    </div>
+
+    <div id="pass-tab" class="tab-content active">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Degree / Batch</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in passed_students %}
+                    <tr>
+                        <td><strong>{{ student.name }}</strong></td>
+                        <td>{{ student.register_number }}</td>
+                        <td>{{ student.degree }} · {{ student.batch }}</td>
+                        <td>{{ student.subject }}</td>
+                        <td><strong>{{ student.score }}</strong> / {{ student.total }}</td>
+                        <td>
+                            <div class="score-bar-wrap">
+                                <div class="score-bar"><div class="score-bar-fill pass" data-width="{{ student.percent }}"></div></div>
+                                <span class="score-pct pass">{{ student.percent }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if student.user_id %}
+                            <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="7">No students passed yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="fail-tab" class="tab-content">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Degree</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in failed_students %}
+                    <tr>
+                        <td><strong>{{ student.name }}</strong></td>
+                        <td>{{ student.register_number }}</td>
+                        <td>{{ student.degree }}</td>
+                        <td><strong>{{ student.score }}</strong> / {{ student.total }}</td>
+                        <td>
+                            <div class="score-bar-wrap">
+                                <div class="score-bar"><div class="score-bar-fill fail" data-width="{{ student.percent }}"></div></div>
+                                <span class="score-pct fail">{{ student.percent }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if student.user_id %}
+                            <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="6">No failed students.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="violation-tab" class="tab-content">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Score at Termination</th>
+                        <th>Percentage</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in violation_students %}
+                    <tr>
+                        <td><strong>{{ student.name }}</strong></td>
+                        <td>{{ student.register_number }}</td>
+                        <td><strong>{{ student.score }}</strong> / {{ student.total }}</td>
+                        <td><span class="badge badge-violation">{{ student.percent }}%</span></td>
+                        <td>
+                            {% if student.user_id %}
+                            <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="5">No violations recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="pending-tab" class="tab-content">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Email</th>
+                        <th>Degree / Batch</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in not_attempted %}
+                    <tr>
+                        <td><strong>{{ student.name }}</strong></td>
+                        <td>{{ student.register_number }}</td>
+                        <td>{{ student.email or '—' }}</td>
+                        <td>{{ student.degree }} · {{ student.batch }}</td>
+                        <td>
+                            <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="5">All registered students have attempted the exam.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="top-tab" class="tab-content">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="rank-cell">Rank</th>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Degree / Batch</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Profile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in stats.top_performers %}
+                    <tr>
+                        <td class="rank-cell">
+                            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}<span class="rank-num">{{ loop.index }}</span>{% endif %}
+                        </td>
+                        <td><strong>{{ student.name }}</strong></td>
+                        <td>{{ student.register_number }}</td>
+                        <td>{{ student.degree }} · {{ student.batch }}</td>
+                        <td>{{ student.subject }}</td>
+                        <td><strong>{{ student.score }}</strong> / {{ student.total }}</td>
+                        <td>
+                            <div class="score-bar-wrap">
+                                <div class="score-bar"><div class="score-bar-fill top" data-width="{{ student.percent }}"></div></div>
+                                <span class="score-pct top">{{ student.percent }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if student.user_id %}
+                            <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="8">No results available yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast">
+    <div style="color:#2e7d32;">✓</div>
+    <div>
+        <strong style="display:block;color:var(--ink);">Done</strong>
+        <span id="toast-msg" style="color:var(--muted);font-size:0.9rem;"></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script id="stats-data" type="application/json">{{ stats | tojson | safe }}</script>
+<script>
+const stats = JSON.parse(document.getElementById('stats-data').textContent);
+const maroon = '#7a0b0b', gold = '#d7b15c';
+
+new Chart(document.getElementById('passFailChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Passed', 'Failed', 'Violations'],
+        datasets: [{
+            data: [stats.passed, stats.failed, stats.violation_count],
+            backgroundColor: [gold, maroon, '#ef4444'],
+            borderWidth: 2, borderColor: '#fff'
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+});
+
+window.scoreDistChart = new Chart(document.getElementById('scoreDistChart'), {
+    type: 'bar',
+    data: {
+        labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+        datasets: [{
+            label: 'Students',
+            data: [stats.score_distribution['0-20%'], stats.score_distribution['21-40%'], stats.score_distribution['41-60%'], stats.score_distribution['61-80%'], stats.score_distribution['81-100%']],
+            backgroundColor: maroon, borderRadius: 6
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('degreeChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(stats.degree_counts),
+        datasets: [{ label: 'Students', data: Object.values(stats.degree_counts), backgroundColor: gold, borderRadius: 6 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('batchChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(stats.batch_counts),
+        datasets: [{ data: Object.values(stats.batch_counts), backgroundColor: ['#7a0b0b', '#d7b15c', '#9b1515', '#c9952d', '#5b0707'], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endblock %}

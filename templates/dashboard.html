@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header" data-live-stats>
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Home</a> / Dashboard</div>
+    <h2>Admin Dashboard</h2>
+    <p>Manage students, exam results, and monitor live performance.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon maroon">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5.784 6A2.24 2.24 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.3 6.3 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1z"/></svg>
+        </div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="total_users">{{ stats.total_users }}</div>
+            <div class="stat-label">Registered Students</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon gold">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+        </div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="total_exams">{{ stats.total_exams }}</div>
+            <div class="stat-label">Exams Completed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+        </div>
+        <div class="stat-body">
+            <div class="stat-value"><span data-stat="pass_rate">{{ stats.pass_rate }}</span>%</div>
+            <div class="stat-label">Pass Rate</div>
+            <div class="stat-sub"><span data-stat="passed">{{ stats.passed }}</span> passed · <span data-stat="failed">{{ stats.failed }}</span> failed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>
+        </div>
+        <div class="stat-body">
+            <div class="stat-value" data-stat="not_attempted">{{ stats.not_attempted }}</div>
+            <div class="stat-label">Not Attempted</div>
+            <div class="stat-sub"><span data-stat="violations">{{ stats.violations }}</span> violations · avg <span data-stat="avg_score">{{ stats.avg_score }}</span>%</div>
+        </div>
+    </div>
+</div>
+
+<div class="layout-split">
+    <div>
+        <div class="toolbar">
+            <form class="search-form" method="GET" action="{{ url_for('dashboard') }}">
+                <input type="text" name="search" placeholder="Search name, email, or register number..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if search_query %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Clear</a>
+                {% endif %}
+            </form>
+            <div class="btn-group">
+                <a href="{{ url_for('export_data') }}" class="btn btn-gold">Export Excel</a>
+                <form action="{{ url_for('clear_all_data') }}" method="POST" onsubmit="return confirm('This will permanently delete ALL users and results. Continue?');">
+                    <button type="submit" class="btn btn-danger">Clear Database</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Registered Users</h3>
+                <span class="badge badge-pending">{{ users|length }} records</span>
+            </div>
+            <div class="panel-body">
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Register No.</th>
+                                <th>Name</th>
+                                <th>Programme</th>
+                                <th>Batch</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td><strong>{{ user.register_number }}</strong></td>
+                                <td>{{ user.name or (user.first_name ~ ' ' ~ user.last_name) }}</td>
+                                <td>{{ user.degree or user.programme or '—' }}</td>
+                                <td>{{ user.batch or user.admission_year or '—' }}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a href="{{ url_for('view_user', user_id=user._id) }}" class="btn btn-sm btn-view">View</a>
+                                        <a href="{{ url_for('edit_user', user_id=user._id) }}" class="btn btn-sm btn-edit">Edit</a>
+                                        <a href="{{ url_for('delete_user', user_id=user._id) }}" class="btn btn-sm btn-delete" onclick="return confirm('Delete this user?');">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr class="empty-row"><td colspan="5">No students found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Exam Results</h3>
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-sm btn-outline">Full Leaderboard →</a>
+            </div>
+            <div class="panel-body">
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Register No.</th>
+                                <th>Subject</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td><strong>{{ result.name }}</strong></td>
+                                <td>{{ result.register_number }}</td>
+                                <td>{{ result.subject }}{% if result.subject_code %} <span style="font-size:0.78rem;color:var(--muted);">({{ result.subject_code }})</span>{% endif %}</td>
+                                <td><strong>{{ result.score }}</strong> / {{ result.total }}</td>
+                                <td>
+                                    <div class="score-bar-wrap">
+                                        <div class="score-bar">
+                                            <div class="score-bar-fill {{ 'pass' if result.percent >= 50 else 'fail' }}" data-width="{{ result.percent }}"></div>
+                                        </div>
+                                        <span class="score-pct {{ 'pass' if result.percent >= 50 else 'fail' }}">{{ result.percent }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if result.status == 'Violation' %}
+                                    <span class="badge badge-violation">Violation</span>
+                                    {% elif result.status == 'Pass' %}
+                                    <span class="badge badge-pass">Pass</span>
+                                    {% else %}
+                                    <span class="badge badge-fail">Fail</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if result.user_id %}
+                                    <a href="{{ url_for('view_user', user_id=result.user_id) }}" class="btn btn-sm btn-view">Profile</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('delete_result', result_id=result.result_id) }}" class="btn btn-sm btn-delete" onclick="return confirm('Delete this result?');">Delete</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr class="empty-row"><td colspan="7">No exam results found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside>
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Top Performers</h3>
+            </div>
+            <div class="panel-body padded">
+                {% if top_three %}
+                {% for student in top_three %}
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+                    <span style="font-size:1.4rem;">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% else %}🥉{% endif %}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;color:var(--ink);font-size:0.9rem;">{{ student.name }}</div>
+                        <div style="font-size:0.78rem;color:var(--muted);">{{ student.register_number }} · {{ student.degree }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-family:'Playfair Display',serif;font-weight:700;color:var(--maroon);">{{ student.percent }}%</div>
+                        <div style="font-size:0.75rem;color:var(--muted);">{{ student.score }}/{{ student.total }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-primary" style="width:100%;margin-top:12px;">View Full Rankings</a>
+                {% else %}
+                <p style="text-align:center;color:var(--muted);font-style:italic;margin:1rem 0;">No results yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not_attempted %}
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Not Attempted</h3>
+                <span class="badge badge-pending">{{ stats.not_attempted }}</span>
+            </div>
+            <div class="panel-body padded">
+                {% for student in not_attempted %}
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+                    <div style="min-width:0;">
+                        <div style="font-weight:600;font-size:0.88rem;">{{ student.name }}</div>
+                        <div style="font-size:0.75rem;color:var(--muted);">{{ student.register_number }}</div>
+                    </div>
+                    <a href="{{ url_for('view_user', user_id=student.user_id) }}" class="btn btn-sm btn-view">View</a>
+                </div>
+                {% endfor %}
+                {% if stats.not_attempted > 5 %}
+                <a href="{{ url_for('analytics') }}#pending-tab" class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;">View all {{ stats.not_attempted }}</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="panel">
+            <div class="panel-header"><h3>Quick Links</h3></div>
+            <div class="panel-body padded" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-outline" style="justify-content:flex-start;">🏆 Leaderboard</a>
+                <a href="{{ url_for('analytics') }}" class="btn btn-outline" style="justify-content:flex-start;">📊 Analytics & Charts</a>
+                <a href="{{ url_for('export_data') }}" class="btn btn-outline" style="justify-content:flex-start;">📥 Export Data</a>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

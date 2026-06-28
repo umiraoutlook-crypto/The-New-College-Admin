@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}View Student{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Dashboard</a> / Student Profile</div>
+    <h2>{{ user.name or (user.first_name ~ ' ' ~ user.last_name) }}</h2>
+    <p>Student profile and exam history from MongoDB Atlas.</p>
+</div>
+
+<div class="layout-split">
+    <div>
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Personal Information</h3>
+                <a href="{{ url_for('edit_user', user_id=user._id) }}" class="btn btn-sm btn-edit">Edit Profile</a>
+            </div>
+            <div class="panel-body padded">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">Full Name</div>
+                        <div class="value">{{ user.name or (user.first_name ~ ' ' ~ user.last_name) }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Register Number</div>
+                        <div class="value" style="display:flex;align-items:center;gap:8px;">
+                            {{ user.register_number }}
+                            <button type="button" class="btn btn-sm btn-outline" onclick="copyText('{{ user.register_number }}', 'Register number')">Copy</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Date of Birth</div>
+                        <div class="value">{{ user.dob_display or user.dob or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Serial No.</div>
+                        <div class="value">{{ user.serial_no or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Programme</div>
+                        <div class="value">{{ user.degree or user.programme or 'N/A' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Admission Year</div>
+                        <div class="value">{{ user.batch or user.admission_year or 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header"><h3>Exam History</h3></div>
+            <div class="panel-body">
+                <div class="table-scroll">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Score</th>
+                                <th>Breakdown</th>
+                                <th>Percentage</th>
+                                <th>Exam Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>
+                                    <strong>{{ result.subject }}</strong>
+                                    {% if result.subject_code %}<br><span style="font-size:0.78rem;color:var(--muted);">{{ result.subject_code }} · Sem {{ result.semester }}</span>{% endif %}
+                                </td>
+                                <td><strong>{{ result.score }}</strong> / {{ result.total }}</td>
+                                <td style="font-size:0.85rem;">
+                                    <span style="color:var(--success);">✓ {{ result.correct }}</span> ·
+                                    <span style="color:var(--danger);">✗ {{ result.wrong }}</span> ·
+                                    <span style="color:var(--muted);">— {{ result.unanswered }}</span>
+                                </td>
+                                <td>
+                                    <div class="score-bar-wrap">
+                                        <div class="score-bar">
+                                            <div class="score-bar-fill {{ 'pass' if result.percent >= 50 else 'fail' }}" data-width="{{ result.percent }}"></div>
+                                        </div>
+                                        <span class="score-pct {{ 'pass' if result.percent >= 50 else 'fail' }}">{{ result.percent }}%</span>
+                                    </div>
+                                </td>
+                                <td style="font-size:0.85rem;">{{ result.exam_date or '—' }}</td>
+                                <td>
+                                    {% if result.status == 'Violation' %}<span class="badge badge-violation">Violation</span>
+                                    {% elif result.status == 'Pass' %}<span class="badge badge-pass">Pass</span>
+                                    {% else %}<span class="badge badge-fail">Fail</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr class="empty-row"><td colspan="6">No exam results for this student.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside>
+        {% if results %}
+        {% set best = results|sort(attribute='percent', reverse=True)|first %}
+        <div class="panel">
+            <div class="panel-header"><h3>Best Score</h3></div>
+            <div class="panel-body padded" style="text-align:center;">
+                <div style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;color:var(--maroon);">{{ best.percent }}%</div>
+                <div style="color:var(--muted);margin-top:4px;">{{ best.score }} / {{ best.total }}</div>
+                <div style="font-size:0.82rem;color:var(--muted);margin-top:6px;">{{ best.subject }}</div>
+                <div style="margin-top:12px;">
+                    {% if best.status == 'Pass' %}<span class="badge badge-pass">Pass</span>
+                    {% elif best.status == 'Violation' %}<span class="badge badge-violation">Violation</span>
+                    {% else %}<span class="badge badge-fail">Fail</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="panel">
+            <div class="panel-body padded" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-outline">View Leaderboard</a>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

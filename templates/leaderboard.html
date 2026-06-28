@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb"><a href="{{ url_for('dashboard') }}">Home</a> / Leaderboard</div>
+    <h2>Student Leaderboard</h2>
+    <p>Complete rankings with student details, scores, and exam status from MongoDB.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon gold"><span style="font-size:1.4rem;">🏆</span></div>
+        <div class="stat-body">
+            <div class="stat-value">{{ entries|length }}</div>
+            <div class="stat-label">Ranked Entries</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><span style="font-size:1.4rem;">✓</span></div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.passed }}</div>
+            <div class="stat-label">Passed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><span style="font-size:1.4rem;">✗</span></div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.failed }}</div>
+            <div class="stat-label">Failed</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon maroon"><span style="font-size:1.4rem;">%</span></div>
+        <div class="stat-body">
+            <div class="stat-value">{{ stats.avg_score }}%</div>
+            <div class="stat-label">Average Score</div>
+        </div>
+    </div>
+</div>
+
+{% if podium %}
+<div class="podium">
+    {% for student in podium %}
+    <div class="podium-card {% if loop.index == 1 %}first{% elif loop.index == 2 %}second{% else %}third{% endif %}">
+        <div class="podium-medal">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% else %}🥉{% endif %}</div>
+        <div class="podium-name">{{ student.name }}</div>
+        <div class="podium-meta">{{ student.register_number }} · {{ student.degree }}</div>
+        <div class="podium-score">{{ student.percent }}%</div>
+        <div style="font-size:0.8rem;color:var(--muted);">{{ student.score }}/{{ student.total }} · {{ student.subject }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="panel">
+    <div class="panel-header">
+        <h3>Full Rankings</h3>
+        <form class="filter-bar" method="GET" action="{{ url_for('leaderboard') }}" style="margin:0;">
+            <input type="text" name="search" placeholder="Search student..." value="{{ search_query }}">
+            <select name="status" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                <option value="pass" {% if status_filter == 'pass' %}selected{% endif %}>Passed Only</option>
+                <option value="fail" {% if status_filter == 'fail' %}selected{% endif %}>Failed Only</option>
+                <option value="violation" {% if status_filter == 'violation' %}selected{% endif %}>Violations</option>
+            </select>
+            <select name="degree" onchange="this.form.submit()">
+                <option value="">All Degrees</option>
+                {% for degree in degrees %}
+                <option value="{{ degree }}" {% if degree_filter == degree %}selected{% endif %}>{{ degree }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            {% if search_query or status_filter != 'all' or degree_filter %}
+            <a href="{{ url_for('leaderboard') }}" class="btn btn-outline btn-sm">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="panel-body">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="rank-cell">Rank</th>
+                        <th>Student</th>
+                        <th>Register No.</th>
+                        <th>Programme</th>
+                        <th>Batch</th>
+                        <th>Subject</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr class="{% if entry.rank == 1 %}rank-1{% endif %}">
+                        <td class="rank-cell">
+                            {% if entry.rank == 1 %}<span class="rank-medal">🥇</span>
+                            {% elif entry.rank == 2 %}<span class="rank-medal">🥈</span>
+                            {% elif entry.rank == 3 %}<span class="rank-medal">🥉</span>
+                            {% else %}<span class="rank-num">{{ entry.rank }}</span>{% endif %}
+                        </td>
+                        <td><strong>{{ entry.name }}</strong></td>
+                        <td>{{ entry.register_number }}</td>
+                        <td>{{ entry.degree }}</td>
+                        <td>{{ entry.batch }}</td>
+                        <td>{{ entry.subject }}</td>
+                        <td><strong>{{ entry.score }}</strong> / {{ entry.total }}</td>
+                        <td>
+                            <div class="score-bar-wrap">
+                                <div class="score-bar">
+                                    <div class="score-bar-fill top" data-width="{{ entry.percent }}"></div>
+                                </div>
+                                <span class="score-pct top">{{ entry.percent }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if entry.status == 'Violation' %}
+                            <span class="badge badge-violation">Violation</span>
+                            {% elif entry.status == 'Pass' %}
+                            <span class="badge badge-pass">Pass</span>
+                            {% else %}
+                            <span class="badge badge-fail">Fail</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.user_id %}
+                            <a href="{{ url_for('view_user', user_id=entry.user_id) }}" class="btn btn-sm btn-view">View</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="10">No leaderboard entries match your filters.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

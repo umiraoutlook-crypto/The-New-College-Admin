@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | The New College</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+<div class="login-page">
+    <div class="login-card">
+        <img src="{{ url_for('static', filename='image.png') }}" alt="The New College" class="login-logo">
+        <h1>The New College</h1>
+        <p class="subtitle">MCQ Examination Admin Portal</p>
+
+        {% if error %}
+        <div class="alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter admin username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%;padding:0.85rem;margin-top:0.5rem;font-size:1rem;">Sign In to Dashboard</button>
+        </form>
+
+        <p style="margin-top:1.5rem;font-size:0.78rem;color:var(--muted);">Secure access for authorized administrators only.</p>
+    </div>
+</div>
+</body>
+</html>
